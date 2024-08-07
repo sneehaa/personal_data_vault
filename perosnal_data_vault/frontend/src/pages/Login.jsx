@@ -40,15 +40,20 @@ const Login = () => {
     try {
       const res = await loginApi(data);
       if (!res.data.success) {
-        toast.error(res.data.message);
+        if (res.data.message === "Please verify your email before logging in.") {
+          toast.error("Please verify your email before logging in.");
+        } else {
+          toast.error(res.data.message || "An error occurred. Please try again.");
+        }
       } else {
         toast.success("Login successful!");
         localStorage.setItem("token", res.data.token);
         localStorage.setItem("user", JSON.stringify(res.data.userData));
         navigate("/homepage");
       }
-    } catch {
-      toast.error("Server Error!");
+    } catch (error) {
+      console.error("Login error:", error);
+      toast.error("Please verify your email before loggign in");
     }
   };
 

@@ -46,7 +46,10 @@ const register = async (req, res) => {
   const { firstName, lastName, email, password } = req.body;
 
   if (!validatePassword(password)) {
-    return res.status(400).json({ success: false, message: "Password does not meet complexity requirements." });
+    return res.status(400).json({ 
+      success: false, 
+      message: "Password must be 8-12 characters long, include at least one uppercase letter, one lowercase letter, one number, and one special character." 
+    });
   }
 
   try {

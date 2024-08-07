@@ -23,6 +23,7 @@ cloudinary.config({
 });
 
 app.use(acceptMultimedia())
+app.use(express.urlencoded({ extended: true }));
 
 // cors config to accept request from frontend
 const corsOptions = {
@@ -38,6 +39,7 @@ connectDB();
 // Accepting json data
 app.use(express.json());
 
+
 // creating test route
 app.get("/test", (req,res) => {
     res.status(200).send("Hello");
@@ -46,6 +48,10 @@ app.get("/test", (req,res) => {
 
 // user route
 app.use('/api/user', require('./routes/userRoutes'))
+
+app.use('/api/data', require('./routes/dataRoutes'))
+
+app.use('/uploads', express.static('uploads'));
 
 // defining port
 const PORT = process.env.PORT;

@@ -8,11 +8,15 @@ import {
   Grid,
   TextField,
   Typography,
+  InputAdornment,
+  IconButton,
 } from "@mui/material";
 import { toast } from "react-toastify";
 import signup from "../assets/images/register.png";
 import { registerApi } from "../apis/Api";
 import zxcvbn from "zxcvbn";
+import Visibility from "@mui/icons-material/Visibility";
+import VisibilityOff from "@mui/icons-material/VisibilityOff";
 
 const Register = () => {
   const [firstName, setFirstName] = useState("");
@@ -20,6 +24,7 @@ const Register = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [passwordStrength, setPasswordStrength] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
   const handleChangeFirstName = (e) => setFirstName(e.target.value);
@@ -29,6 +34,11 @@ const Register = () => {
     setPassword(e.target.value);
     const result = zxcvbn(e.target.value);
     setPasswordStrength(result.score);
+  };
+
+  const handleClickShowPassword = () => setShowPassword((show) => !show);
+  const handleMouseDownPassword = (event) => {
+    event.preventDefault();
   };
 
   const handleSubmit = (e) => {
@@ -41,7 +51,6 @@ const Register = () => {
           toast.success("Registration successful! Please check your email to verify your account.");
           navigate("/login");
         } else {
-          // Custom error messages based on the response
           if (res.data.message.includes("email")) {
             toast.error("The email address you entered is already in use. Please try another one.");
           } else if (res.data.message.includes("password")) {
@@ -118,7 +127,7 @@ const Register = () => {
                 fullWidth
                 name="password"
                 label="Password"
-                type="password"
+                type={showPassword ? "text" : "password"}
                 id="password"
                 autoComplete="new-password"
                 onChange={handleChangePassword}
@@ -127,6 +136,20 @@ const Register = () => {
                   "Unknown"
                 }`}
                 error={passwordStrength < 2}
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton
+                        aria-label="toggle password visibility"
+                        onClick={handleClickShowPassword}
+                        onMouseDown={handleMouseDownPassword}
+                        edge="end"
+                      >
+                        {showPassword ? <Visibility /> : <VisibilityOff />}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }}
                 sx={{ borderColor: "#ff6f6f" }}
               />
             </Grid>
