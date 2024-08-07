@@ -1,0 +1,163 @@
+import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import {
+  Button,
+  Box,
+  Container,
+  CssBaseline,
+  Grid,
+  TextField,
+  Typography,
+} from "@mui/material";
+import { toast } from "react-toastify";
+import signup from "../assets/images/register.png";
+import { registerApi } from "../apis/Api";
+import zxcvbn from "zxcvbn";
+
+const Register = () => {
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [passwordStrength, setPasswordStrength] = useState("");
+  const navigate = useNavigate();
+
+  const handleChangeFirstName = (e) => setFirstName(e.target.value);
+  const handleChangeLastName = (e) => setLastName(e.target.value);
+  const handleChangeEmail = (e) => setEmail(e.target.value);
+  const handleChangePassword = (e) => {
+    setPassword(e.target.value);
+    const result = zxcvbn(e.target.value);
+    setPasswordStrength(result.score);
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const data = { firstName, lastName, email, password };
+
+    registerApi(data)
+      .then((res) => {
+        if (res.data.success) {
+          toast.success("Registration successful! Please check your email to verify your account.");
+          navigate("/login");
+        } else {
+          // Custom error messages based on the response
+          if (res.data.message.includes("email")) {
+            toast.error("The email address you entered is already in use. Please try another one.");
+          } else if (res.data.message.includes("password")) {
+            toast.error("The password you entered is too weak. Please choose a stronger password.");
+          } else {
+            toast.error(res.data.message || "An error occurred. Please try again.");
+          }
+        }
+      })
+      .catch((error) => {
+        console.error("Registration error:", error);
+        toast.error("An unexpected error occurred. Please try again later.");
+      });
+  };
+
+  return (
+    <Container component="main" maxWidth="xs">
+      <CssBaseline />
+      <Box
+        sx={{
+          marginTop: 8,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+        }}
+      >
+        <img src={signup} alt="logo" height={100} width={100} />
+        <Typography component="h1" variant="h5" style={{ color: "#ff6f6f" }}>
+          Register
+        </Typography>
+        <h6>Register your account here</h6>
+        <Box component="form" noValidate onSubmit={handleSubmit} sx={{ mt: 3 }}>
+          <Grid container spacing={2}>
+            <Grid item xs={12}>
+              <TextField
+                autoComplete="given-name"
+                name="firstName"
+                required
+                fullWidth
+                id="firstName"
+                label="First Name"
+                autoFocus
+                onChange={handleChangeFirstName}
+                sx={{ borderColor: "#ff6f6f" }}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                required
+                fullWidth
+                id="lastName"
+                label="Last Name"
+                name="lastName"
+                autoComplete="family-name"
+                onChange={handleChangeLastName}
+                sx={{ borderColor: "#ff6f6f" }}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                required
+                fullWidth
+                id="email"
+                label="Email Address"
+                name="email"
+                autoComplete="email"
+                onChange={handleChangeEmail}
+                sx={{ borderColor: "#ff6f6f" }}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                required
+                fullWidth
+                name="password"
+                label="Password"
+                type="password"
+                id="password"
+                autoComplete="new-password"
+                onChange={handleChangePassword}
+                helperText={`Password strength: ${
+                  ["Weak", "Fair", "Good", "Strong"][passwordStrength] ||
+                  "Unknown"
+                }`}
+                error={passwordStrength < 2}
+                sx={{ borderColor: "#ff6f6f" }}
+              />
+            </Grid>
+          </Grid>
+          <Button
+            type="submit"
+            fullWidth
+            variant="contained"
+            disableElevation
+            sx={{
+              mt: 3,
+              mb: 2,
+              backgroundColor: "#ff8b8b",
+              borderRadius: "22px",
+              "&:hover": { backgroundColor: "#ff8b8b" },
+              "&:focus": { backgroundColor: "#ff8b8b" },
+            }}
+          >
+            Sign Up
+          </Button>
+          <Grid container justifyContent="flex-end">
+            <Grid item>
+              <Link to="/login" variant="body2">
+                Already have an account? Sign in
+              </Link>
+            </Grid>
+          </Grid>
+        </Box>
+      </Box>
+    </Container>
+  );
+};
+
+export default Register;
