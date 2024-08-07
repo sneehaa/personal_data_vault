@@ -149,19 +149,31 @@ const loginUser = async (req, res) => {
 const getUserProfile = async (req, res) => {
   try {
     const userId = req.params.userId;
-    const user = await User.findById(userId);
+    const user = await User.findById(userId); // Ensure the model name is correct
 
     if (!user) {
-      return res.status(404).json({ success: false, message: "User not found" });
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
     }
 
     const userProfile = { ...user.toObject() };
     delete userProfile.password;
 
-    res.status(200).json({ success: true, message: "User profile fetched successfully.", userProfile });
+    res.status(200).json({
+      success: true,
+      message: "User profile fetched successfully.",
+      userProfile,
+    });
   } catch (error) {
-    res.status(500).json({ success: false, message: "Server Error", error: error.message });
+    res.status(500).json({
+      success: false,
+      message: "Server Error",
+      error: error.message,
+    });
   }
 };
+
 
 module.exports = { register, loginUser, verifyEmail, getUserProfile };

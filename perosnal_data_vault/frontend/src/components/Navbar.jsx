@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import logo from "../assets/images/logo.png";
 import "../styles/navbar.css";
 import 'bootstrap/dist/css/bootstrap.min.css';
+import 'bootstrap/dist/js/bootstrap.bundle.min';
 
 
 const Navbar = () => {
@@ -48,20 +49,7 @@ const Navbar = () => {
         >
           Home
         </Link>
-        <Link
-          to="/hotels"
-          className={activePage === "hotels" ? "active" : ""}
-          onClick={() => handleItemClick("hotels")}
-        >
-          Hotels
-        </Link>
-        <Link
-          to="/my-bookings"
-          className={activePage === "mybookings" ? "active" : ""}
-          onClick={() => handleItemClick("mybookings")}
-        >
-          MyBookings
-        </Link>
+      
       </div>
       <form className="d-flex gap-2" role="search">
         {user ? (
@@ -98,7 +86,7 @@ const Navbar = () => {
             <button onClick={handleLogin} className="btn btn-outline-danger" type="button">
               Login
             </button>
-            <button onClick = {handleRegister}className="btn btn-outline-success" type="button">
+            <button onClick={handleRegister} className="btn btn-outline-success" type="button">
               Register
             </button>
           </>

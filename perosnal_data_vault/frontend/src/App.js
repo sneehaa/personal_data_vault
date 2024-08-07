@@ -8,6 +8,7 @@ import Login from "./pages/Login.jsx";
 import Navbar from "./components/Navbar.jsx";
 import UserRoutes from "./protectedRoutes/UserRoutes.jsx";
 import VerifyEmail from "./pages/VerifyEmail.jsx";
+import Homepage from "./pages/Homepage.jsx";
 
 
 
@@ -32,8 +33,12 @@ function App() {
         <Route path="/" element={<Login />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        <Route path="/profile" element={<UserProfile />} />
         <Route path="/user/:id/verify/:token" element={<VerifyEmail />} />
+        <Route path="/homepage" element={<Homepage />} />
+       
+
+        <Route path="/profile" element={<UserProfile />} />
+
         <Route element={<UserRoutes />}>
           <Route path="/profile" element={<h1>Profile</h1>} />
         </Route>

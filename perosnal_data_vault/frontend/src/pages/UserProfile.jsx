@@ -1,11 +1,12 @@
 import Alert from "@mui/material/Alert";
 import Snackbar from "@mui/material/Snackbar";
 import axios from "axios";
-import { jwtDecode } from "jwt-decode";
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import Loading from "../components/Loading";
 import "../styles/userProfile.css";
+import { jwtDecode } from "jwt-decode";
+
 
 import {
     Avatar,
@@ -18,16 +19,15 @@ import {
     Typography
 } from "@mui/material";
 
-
 const UserProfile = () => {
     const [userData, setUserData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [editMode, setEditMode] = useState(false);
     const [editedData, setEditedData] = useState({});
     const [imagePreview, setImagePreview] = useState("");
-    const [openSnackbar, setOpenSnackbar] = React.useState(false);
-    const [snackbarSeverity, setSnackbarSeverity] = React.useState("success");
-    const [snackbarMessage, setSnackbarMessage] = React.useState("");
+    const [openSnackbar, setOpenSnackbar] = useState(false);
+    const [snackbarSeverity, setSnackbarSeverity] = useState("success");
+    const [snackbarMessage, setSnackbarMessage] = useState("");
     const user = JSON.parse(localStorage.getItem("user"));
 
     const handleOpenSnackbar = (severity, message) => {
@@ -42,63 +42,67 @@ const UserProfile = () => {
 
     const fetchUserProfile = async () => {
         try {
-            if (user) {
-                const token = localStorage.getItem("token");
-
-                const decodedToken = jwtDecode(token);
-                const userId = decodedToken.id;
-                if (!decodedToken || !decodedToken.id) {
-                    throw new Error("Unable to decode token or retrieve user ID.");
-                }
-
-                const config = {
-                    headers: {
-                        Authorization: ` Bearer ${token}`,
-                    },
-                };
-
-                const response = await axios.get(
-                    `http://localhost:5500/api/user/profile/${userId}`,
-                    config
-                );
-                setUserData(response.data.userProfile);
-                setLoading(false);
-            }
+          const token = localStorage.getItem('token');
+          console.log('Token:', token); // Log the token value
+      
+          if (!token) {
+            throw new Error("No token found");
+          }
+      
+          const decodedToken = jwtDecode(token);
+          console.log('Decoded token:', decodedToken); // Log the decoded token
+      
+          const userId = decodedToken._id;
+          if (!userId) {
+            throw new Error("Unable to decode token or retrieve user ID.");
+          }
+      
+          const response = await axios.get(`http://localhost:5500/api/user/profile/${userId}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+      
+          setUserData(response.data.userProfile);
+          setLoading(false);
         } catch (error) {
-            console.error("Error fetching user profile:", error);
-            setLoading(false);
+          console.error("Error fetching user profile:", error);
+          setLoading(false);
         }
-    };
+      };
 
     useEffect(() => {
         fetchUserProfile();
     }, []);
 
     const handleEditProfile = () => {
-        setEditMode(true);
-        setEditedData({
-            firstName: userData.firstName,
-            lastName: userData.lastName,
-            email: userData.email,
-            username: userData.username,
-            phone: userData.phone,
-            address: userData.address,
-        });
+        if (userData) {
+            setEditMode(true);
+            setEditedData({
+                firstName: userData.firstName,
+                lastName: userData.lastName,
+                email: userData.email,
+                username: userData.username,
+                phone: userData.phone,
+                address: userData.address,
+            });
+        }
     };
 
     const handleImageChange = (e) => {
         const file = e.target.files[0];
-        setEditedData({ ...editedData, image: file });
-        const reader = new FileReader();
-        reader.onloadend = () => {
-            setImagePreview(reader.result);
-        };
-        reader.readAsDataURL(file);
+        if (file) {
+            setEditedData({ ...editedData, image: file });
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setImagePreview(reader.result);
+            };
+            reader.readAsDataURL(file);
+        }
     };
 
     const handleSubmit = async () => {
         try {
             const token = localStorage.getItem("token");
+            if (!token) throw new Error("No token found");
 
             const decodedToken = jwtDecode(token);
             const userId = decodedToken.id;
@@ -112,7 +116,7 @@ const UserProfile = () => {
                 },
             };
 
-            const response = await axios.put(
+            await axios.put(
                 `http://localhost:5500/api/user/edit/${userId}`,
                 editedData,
                 config
@@ -132,7 +136,7 @@ const UserProfile = () => {
             <div className="error-message">Please log in to view your profile</div>
         );
     }
-    // Function to get initials from first name and last name
+
     const getInitials = (firstName, lastName) => {
         return `${firstName.charAt(0)}${lastName.charAt(0)}`;
     };
@@ -162,8 +166,7 @@ const UserProfile = () => {
                             </div>
                             <div className="profile-info">
                                 <p>
-                                    <strong>Name:</strong> {userData.firstName}{" "}
-                                    {userData.lastName}
+                                    <strong>Name:</strong> {userData.firstName} {userData.lastName}
                                 </p>
                                 <p>
                                     <strong>Email:</strong> {userData.email}
@@ -214,7 +217,6 @@ const UserProfile = () => {
                         Edit Profile
                     </Typography>
 
-                    {/* Image section */}
                     <Box
                         sx={{
                             display: "flex",
@@ -225,7 +227,7 @@ const UserProfile = () => {
                     >
                         <Avatar
                             alt="Profile Picture"
-                            src={imagePreview} // Use image preview as src
+                            src={imagePreview}
                             sx={{ width: 100, height: 100, marginRight: "1rem" }}
                         />
                         <label htmlFor="upload-photo">
@@ -234,19 +236,11 @@ const UserProfile = () => {
                                 id="upload-photo"
                                 name="upload-photo"
                                 type="file"
-                                onChange={handleImageChange} // Handle file change
+                                onChange={handleImageChange}
                             />
-                            {/* <IconButton
-                                color="primary"
-                                aria-label="upload picture"
-                                component="span"
-                            >
-                                <EditIcon />
-                            </IconButton> */}
                         </label>
                     </Box>
 
-                    {/* Text fields */}
                     <Grid container spacing={2}>
                         <Grid item xs={6}>
                             <TextField
@@ -272,76 +266,84 @@ const UserProfile = () => {
                                 margin="normal"
                             />
                         </Grid>
+                        <Grid item xs={12}>
+                            <TextField
+                                label="Email"
+                                value={editedData.email}
+                                onChange={(e) =>
+                                    setEditedData({ ...editedData, email: e.target.value })
+                                }
+                                variant="outlined"
+                                fullWidth
+                                margin="normal"
+                            />
+                        </Grid>
+                        <Grid item xs={12}>
+                            <TextField
+                                label="Username"
+                                value={editedData.username}
+                                onChange={(e) =>
+                                    setEditedData({ ...editedData, username: e.target.value })
+                                }
+                                variant="outlined"
+                                fullWidth
+                                margin="normal"
+                            />
+                        </Grid>
+                        <Grid item xs={12}>
+                            <TextField
+                                label="Phone Number"
+                                value={editedData.phone}
+                                onChange={(e) =>
+                                    setEditedData({ ...editedData, phone: e.target.value })
+                                }
+                                variant="outlined"
+                                fullWidth
+                                margin="normal"
+                            />
+                        </Grid>
+                        <Grid item xs={12}>
+                            <TextField
+                                label="Address"
+                                value={editedData.address}
+                                onChange={(e) =>
+                                    setEditedData({ ...editedData, address: e.target.value })
+                                }
+                                variant="outlined"
+                                fullWidth
+                                margin="normal"
+                            />
+                        </Grid>
                     </Grid>
-                    <TextField
-                        label="Email"
-                        value={editedData.email}
-                        onChange={(e) =>
-                            setEditedData({ ...editedData, email: e.target.value })
-                        }
-                        variant="outlined"
-                        fullWidth
-                        margin="normal"
-                    />
-                    <TextField
-                        label="Username"
-                        value={editedData.username}
-                        onChange={(e) =>
-                            setEditedData({ ...editedData, username: e.target.value })
-                        }
-                        variant="outlined"
-                        fullWidth
-                        margin="normal"
-                    />
-                    <TextField
-                        label="Phone Number"
-                        value={editedData.phone}
-                        onChange={(e) =>
-                            setEditedData({ ...editedData, phone: e.target.value })
-                        }
-                        variant="outlined"
-                        fullWidth
-                        margin="normal"
-                    />
-                    <TextField
-                        label="Address"
-                        value={editedData.address}
-                        onChange={(e) =>
-                            setEditedData({ ...editedData, address: e.target.value })
-                        }
-                        variant="outlined"
-                        fullWidth
-                        margin="normal"
-                    />
 
-                    {/* Save Changes button */}
-                    <Button
-                        variant="contained"
-                        color="primary"
-                        onClick={handleSubmit}
-                        fullWidth
-                        style={{ marginTop: "1rem", backgroundColor: "#ff8b8b", color: "#ffffff" }}
+                    <Box
+                        sx={{
+                            display: "flex",
+                            justifyContent: "flex-end",
+                            marginTop: "1rem",
+                        }}
                     >
-                        Save Changes
-                    </Button>
+                        <Button
+                            variant="contained"
+                            onClick={handleSubmit}
+                            color="primary"
+                        >
+                            Save
+                        </Button>
+                    </Box>
                 </Box>
             </Modal>
             <Snackbar
                 open={openSnackbar}
                 autoHideDuration={6000}
                 onClose={handleCloseSnackbar}
-                anchorOrigin={{ vertical: "top", horizontal: "right" }}
             >
-                <Alert
-                    onClose={handleCloseSnackbar}
-                    severity={snackbarSeverity}
-                    variant="filled"
-                    sx={{ width: "100%" }}
-                >
+                <Alert onClose={handleCloseSnackbar} severity={snackbarSeverity}>
                     {snackbarMessage}
                 </Alert>
             </Snackbar>
         </>
     );
 };
+
 export default UserProfile;
