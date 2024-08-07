@@ -5,6 +5,7 @@ const Token = require("../model/tokenModel");
 const crypto = require("crypto");
 const sendEmail = require("../utils/sendEmail");
 const { validationResult } = require("express-validator");
+const {logActivity} = require("../auditLogger");
 
 const PASSWORD_MIN_LENGTH = 8;
 const PASSWORD_MAX_LENGTH = 12;
@@ -76,11 +77,14 @@ const register = async (req, res) => {
     await newUser.save();
     await sendVerificationEmail(newUser);
 
+    await logActivity(newUser._id, 'User Registration', 'User registered successfully');
     res.status(201).json({ success: true, message: "User registered successfully. Please check your email for verification." });
   } catch (error) {
+    console.error("Error during registration:", error);  // Log the error for debugging
     res.status(500).json({ success: false, message: "Server error." });
   }
 };
+
 
 const verifyEmail = async (req, res) => {
   const { token } = req.params;
@@ -100,6 +104,7 @@ const verifyEmail = async (req, res) => {
     user.emailVerificationExpires = undefined;
     await user.save();
 
+    await logActivity(user._id, 'Email Verification', 'Email Verified successfully');
     res.json({ success: true, message: "Email verified successfully.", redirectUrl: '/login' });
   } catch (error) {
     res.status(500).json({ success: false, message: "Server error." });
@@ -117,6 +122,7 @@ const loginUser = async (req, res) => {
   try {
     const user = await User.findOne({ email });
     if (!user) {
+      await logActivity(null, 'Failed Login Attempt', `Attempted login with email: ${email}`);
       return res.status(400).json({ success: false, message: "Invalid credentials." });
     }
 
@@ -135,6 +141,7 @@ const loginUser = async (req, res) => {
         user.accountLockedUntil = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes lockout
       }
       await user.save();
+      await logActivity(user._id, 'Failed Login Attempt', 'Invalid password');
       return res.status(400).json({ success: false, message: "Invalid credentials." });
     }
 
@@ -143,11 +150,14 @@ const loginUser = async (req, res) => {
     await user.save();
 
     const token = user.generateAuthToken();
+    await logActivity(user._id, 'Successful Login', 'User logged in successfully');
     res.status(200).json({ success: true, message: "Login successful.", token, userData: user });
   } catch (error) {
+    console.error("Error during login:", error); // Log the error for debugging
     res.status(500).json({ success: false, message: "Server error." });
   }
 };
+
 
 const getUserProfile = async (req, res) => {
   try {
@@ -155,6 +165,7 @@ const getUserProfile = async (req, res) => {
     const user = await User.findById(userId); // Ensure the model name is correct
 
     if (!user) {
+      await logActivity(null, 'User Profile Access', 'User not found');
       return res.status(404).json({
         success: false,
         message: "User not found",
@@ -164,12 +175,15 @@ const getUserProfile = async (req, res) => {
     const userProfile = { ...user.toObject() };
     delete userProfile.password;
 
+    await logActivity(user._id, 'User Profile Access', 'User profile fetched successfully');
     res.status(200).json({
       success: true,
       message: "User profile fetched successfully.",
       userProfile,
     });
   } catch (error) {
+    console.error("Error during fetching user profile:", error); // Log the error for debugging
+    await logActivity(null, 'User Profile Access', 'Error fetching user profile');
     res.status(500).json({
       success: false,
       message: "Server Error",
@@ -177,6 +191,7 @@ const getUserProfile = async (req, res) => {
     });
   }
 };
+
 
 
 module.exports = { register, loginUser, verifyEmail, getUserProfile };
