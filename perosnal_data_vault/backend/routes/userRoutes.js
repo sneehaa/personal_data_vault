@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const userController = require("../controller/userController");
 const { body } = require("express-validator");
+const { authGuard, authGuardAdmin } = require('../middleware/authGurad');
 
 router.post(
   "/register",
@@ -25,5 +26,19 @@ router.post(
 
 router.get("/:id/verify/:token/", userController.verifyEmail);
 router.get("/profile/:userId", userController.getUserProfile);
+
+router.get('/getAll', authGuard, authGuardAdmin, userController.getAllUsers);
+
+router.delete('/delete/:id', authGuard, authGuardAdmin, userController.deleteUser);
+
+
+router.post('/logout', (req, res) => {
+  req.session.destroy(err => {
+      if (err) {
+          return res.status(500).json({ success: false, message: "Logout failed." });
+      }
+      res.json({ success: true, message: "Logged out successfully." });
+  });
+});
 
 module.exports = router;

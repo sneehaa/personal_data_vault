@@ -1,18 +1,17 @@
-const express = require('express');
-const router = express.Router();
+const router = require('express').Router();
 const dataController = require("../controller/dataController");
-const upload = require('../multer_config'); 
-const { authGuard} = require("../middleware/authGurad");
+const { authGuard } = require('../middleware/authGurad');
 
-router.post('/add', upload.array('images', 12), authGuard, dataController.createData);
+router.post('/create_data', authGuard, dataController.createData);
 
-router.get('/view', authGuard, dataController.viewData);
+router.get("/get_data", authGuard, dataController.getData);
 
-router.get('/user/:userId', authGuard, dataController.getDataById);
+router.get("/get_data/:id", authGuard, dataController.getSingleData);
 
+router.put("/update_data/:id", authGuard, dataController.updatedata);
 
-router.put('/:dataId', authGuard, dataController.updateData);
+router.delete("/delete_data/:id", authGuard, dataController.deletedata);
 
-router.delete('/:dataId',authGuard,  dataController.deleteData);
 
 module.exports = router;
+ 
