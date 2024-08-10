@@ -10,6 +10,11 @@ const auditSchema = new mongoose.Schema({
 const AuditLog = mongoose.model("AuditLog", auditSchema);
 
 const logActivity = async (userId, action, details) => {
+  if (!userId) {
+    console.error("User ID is required to log activity.");
+    return;
+  }
+
   const log = new AuditLog({ userId, action, details });
   try {
     await log.save();
@@ -18,6 +23,7 @@ const logActivity = async (userId, action, details) => {
     console.error("Error saving audit log:", err);
   }
 };
+
 
 module.exports = {
   logActivity,
