@@ -1,181 +1,190 @@
+const cloudinary = require("cloudinary");
 const Data = require("../model/dataModel");
-const mongoose = require("mongoose");
 
-// Create new data entry
 const createData = async (req, res) => {
+  // step 1 : check incomming data
+  console.log(req.body);
+  console.log(req.files);
+
+  // step 2 : Destructuring data
+  const { fullName, dateOfBirth, address, phoneNumber, email } = req.body;
+  const { dataImage } = req.files;
+
+  // step 3 : Validate data
+  if (!fullName || !dateOfBirth || !address || !phoneNumber || !email) {
+    return res.json({
+      success: false,
+      message: "Please fill all the fields",
+    });
+  }
+
   try {
-    const { fullName, dateOfBirth, address, phoneNumber, email } = req.body;
-    let documents = [];
-
-    console.log("Create Data: req.user:", req.user); // Log the req.user object
-
-    const { id: userId } = req.user; // Ensure the correct property is accessed
-
-    if (!userId) {
-      return res.status(401).json({
-        success: false,
-        message: "Unauthorized access. Please login again.",
-      });
-    }
-
-    if (req.files && Array.isArray(req.files)) {
-      documents = req.files.map((file) => file.path);
-    }
-
-    if (!fullName || !dateOfBirth || !address || !phoneNumber || !email) {
-      return res.status(400).json({
-        success: false,
-        message: "Please provide all required fields.",
-      });
-    }
-
-    const newData = new Data({
-      fullName,
-      dateOfBirth,
-      address,
-      phoneNumber,
-      email,
-      documents,
-      createdBy: userId,
+    // upload image to cloudinary
+    const uploadedImage = await cloudinary.v2.uploader.upload(dataImage.path, {
+      folder: "userData",
+      crop: "scale",
     });
 
+    // Save to database
+    const newData = new Data({
+      fullName: fullName,
+      dateOfBirth:  dateOfBirth,
+      address: address,
+      phoneNumber: phoneNumber,
+      email: email,
+      dataImageUrl: uploadedImage.secure_url,
+    });
     await newData.save();
-    res.status(201).json({
+    res.json({
       success: true,
-      message: "Data added successfully.",
+      message: "Data created successfully",
       data: newData,
     });
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: "Server Error",
-      error: error.message,
+      message: "Internal server error",
     });
   }
 };
 
-// View all data entries for a specific user
-const viewData = async (req, res) => {
+// get all Data
+const getData = async (req, res) => {
   try {
-    const userId = req.params.userId;
-    const data = await Data.find({ createdBy: userId });
-    res.status(200).json({
+    const allData = await Data.find({});
+    res.json({
       success: true,
-      message: "Data fetched successfully.",
-      data,
+      message: "All datas fetched successfully!",
+      data: allData,
     });
+  } catch (error) {
+    console.log(error);
+    res.send("Internal server error");
+  }
+};
+
+// fetch single data
+const getSingleData = async (req, res) => {
+  const dataId = req.params.id;
+  try {
+    const singleData = await Data.findById(dataId);
+    res.json({
+      success: true,
+      message: "Single data fetched successfully!",
+      data: singleData,
+    });
+  } catch (error) {
+    console.log(error);
+    res.send("Internal server error");
+  }
+};
+
+// update data
+const updatedata = async (req, res) => {
+  // step 1 : check incomming data
+  console.log(req.body);
+  console.log(req.files);
+
+  // destructuring data
+  const { fullName, dateOfBirth, address, phoneNumber, email } =
+    req.body;
+  const { dataImage } = req.files;
+
+  // validate data
+  if (
+    !fullName ||
+    !dateOfBirth ||
+    !address ||
+    !phoneNumber ||
+    !email
+  ) {
+    return res.json({
+      success: false,
+      message: "Required fields are missing!",
+    });
+  }
+
+  try {
+    // case 1 : if there is image
+    if (dataImage) {
+      // upload image to cloudinary
+      const uploadedImage = await cloudinary.v2.uploader.upload(
+        dataImage.path,
+        {
+          folder: "userData",
+          crop: "scale",
+        }
+      );
+
+      // make updated json data
+      const updatedData = {
+        fullName: fullName,
+      dateOfBirth:  dateOfBirth,
+      address: address,
+      phoneNumber: phoneNumber,
+      email: email,
+      dataImageUrl: uploadedImage.secure_url,
+      };
+
+      // find data and update
+      const dataId = req.params.id;
+      await Data.findByIdAndUpdate(dataId, updatedData);
+      res.json({
+        success: true,
+        message: "data updated successfully with Image!",
+        updateddata: updatedData,
+      });
+    } else {
+      // update without image
+      const updatedData = {
+        fullName: fullName,
+      dateOfBirth:  dateOfBirth,
+      address: address,
+      phoneNumber: phoneNumber,
+      email: email,
+      
+      };
+
+      // find data and update
+      const dataId = req.params.id;
+      await Data.findByIdAndUpdate(dataId, updatedData);
+      res.json({
+        success: true,
+        message: "data updated successfully without Image!",
+        updateddata: updatedData,
+      });
+    }
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: "Server Error",
-      error: error.message,
+      message: "Internal server error",
     });
   }
 };
 
-// Get data entry by ID
-const getDataById = async (req, res) => {
+// delete data
+const deletedata = async (req, res) => {
+  const dataId = req.params.id;
+
   try {
-    const dataId = req.params.dataId;
-
-    if (!mongoose.Types.ObjectId.isValid(dataId)) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid Data ID.",
-      });
-    }
-
-    const data = await Data.findById(dataId);
-
-    if (!data) {
-      return res.status(404).json({
-        success: false,
-        message: "Data not found.",
-      });
-    }
-
-    data.documents = data.documents.map(
-      (doc) => `http://192.168.68.109:5500/uploads/${doc}`
-    );
-
-    res.status(200).json({
+    await Data.findByIdAndDelete(dataId);
+    res.json({
       success: true,
-      message: "Data fetched successfully.",
-      data,
+      message: "data deleted successfully!",
     });
   } catch (error) {
-    res.status(500).json({
+    res.json({
       success: false,
-      message: "Server Error",
-      error: error.message,
+      message: "Server error!!",
     });
   }
 };
 
-// Update a data entry
-const updateData = async (req, res) => {
-  try {
-    const dataId = req.params.dataId;
-    const updatedData = req.body;
-
-    const data = await Data.findByIdAndUpdate(dataId, updatedData, {
-      new: true,
-    });
-
-    if (!data) {
-      return res.status(404).json({
-        success: false,
-        message: "Data not found.",
-      });
-    }
-
-    res.status(200).json({
-      success: true,
-      message: "Data updated successfully.",
-      data,
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: "Server Error",
-      error: error.message,
-    });
-  }
-};
-
-// Delete a data entry
-const deleteData = async (req, res) => {
-  try {
-    const dataId = req.params.dataId;
-
-    const data = await Data.findByIdAndDelete(dataId);
-
-    if (!data) {
-      return res.status(404).json({
-        success: false,
-        message: "Data not found.",
-      });
-    }
-
-    res.status(200).json({
-      success: true,
-      message: "Data deleted successfully.",
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: "Server Error",
-      error: error.message,
-    });
-  }
-};
 
 module.exports = {
-    createData,
-    viewData,
-    getDataById,
-    updateData,
-    deleteData
-
-    
+ createData,
+ getData,
+ getSingleData,
+ updatedata,
+ deletedata
 };
