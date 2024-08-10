@@ -13,7 +13,7 @@ import {
 } from "@mui/material";
 import { toast } from "react-toastify";
 import signup from "../assets/images/register.png";
-import { registerApi } from "../apis/Api";
+import { registerApi } from "../apis/api";
 import zxcvbn from "zxcvbn";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
@@ -44,7 +44,9 @@ const Register = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     const data = { firstName, lastName, email, password };
-
+    
+    console.log("Submitting registration data:", data); // Log request data
+    
     registerApi(data)
       .then((res) => {
         if (res.data.success) {
@@ -62,7 +64,11 @@ const Register = () => {
       })
       .catch((error) => {
         console.error("Registration error:", error);
-        toast.error("An unexpected error occurred. Please try again later.");
+        if (error.response && error.response.data) {
+          toast.error(`Error: ${error.response.data.message}`);
+        } else {
+          toast.error("An unexpected error occurred. Please try again later.");
+        }
       });
   };
 

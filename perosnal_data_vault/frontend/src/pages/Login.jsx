@@ -11,7 +11,9 @@ import {
 } from "@mui/material";
 import { toast } from "react-toastify";
 import loginImage from "../assets/images/login.png";
-import { loginApi } from "../apis/Api";
+import { loginApi } from "../apis/api";
+
+
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -36,26 +38,29 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     const data = { email, password };
-
+  
     try {
       const res = await loginApi(data);
       if (!res.data.success) {
-        if (res.data.message === "Please verify your email before logging in.") {
-          toast.error("Please verify your email before logging in.");
-        } else {
-          toast.error(res.data.message || "An error occurred. Please try again.");
-        }
+        toast.error(res.data.message || "An error occurred. Please try again.");
       } else {
         toast.success("Login successful!");
         localStorage.setItem("token", res.data.token);
         localStorage.setItem("user", JSON.stringify(res.data.userData));
-        navigate("/homepage");
+  
+        // Check if user is an admin
+        if (res.data.userData.role === 'admin') {
+          navigate("/admin/dashboard");
+        } else {
+          navigate("/");
+        }
       }
     } catch (error) {
-      console.error("Login error:", error);
-      toast.error("Please verify your email before loggign in");
+      console.error("Login error:", error.response?.data || error.message); // Log error response
+      toast.error(error.response?.data?.message || "An error occurred during login.");
     }
   };
+  
 
   return (
     <Container component="main" maxWidth="xs">
