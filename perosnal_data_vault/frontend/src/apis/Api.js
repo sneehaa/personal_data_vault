@@ -1,18 +1,19 @@
-// importing axios
 import axios from "axios";
 
 // Creating Axios instance
 const Api = axios.create({
     baseURL: "http://localhost:5500",
-    withCredentials: true,
 });
 
-// configuration for axios
-const config = {
-    headers :{
-        "Content-Type": "multipart/form-data",
-        'authorization' : `Bearer ${localStorage.getItem('token')}`
-    }
+// Function to get the config with the latest token
+const getConfig = () => {
+    const token = localStorage.getItem('token');
+    return {
+        headers: {
+            'Authorization': `Bearer ${token}`,
+            // 'Content-Type': 'multipart/form-data'
+        }
+    };
 }
 
 // Creating test API
@@ -24,15 +25,23 @@ export const registerApi = (data) => Api.post("/api/user/register", data);
 // Creating login API
 export const loginApi = (data) => Api.post("/api/user/login", data);
 
-export const getUserProfileApi = (userId) => Api.get(`/api/user/profile/${userId}`);
+export const getUserProfileApi = (userId) => Api.get(`/api/user/profile/${userId}`, getConfig());
 
 export const verifyEmailApi = (token) => Api.get(`/verify-email/${token}`);
 
 // Creating add data API
-export const addDataApi = (data) => Api.post("/api/data/add", data, config);
+export const addDataApi = (formData) => Api.post("/api/data/create_data", formData, getConfig());
 
-// Creating view data API
-export const viewDataApi = () => Api.get("/api/data/view", config);
+export const getAllDataApi = () => Api.get('/api/data/get_data', getConfig());
 
+export const getSingleDataApi = (id) => Api.get(`/api/data/get_data/${id}`, getConfig());
+
+export const updateDataApi = (id, formData) => Api.put(`/api/data/update_data/${id}`, formData, getConfig());
+
+export const deleteDataApi = (id) => Api.delete(`/api/data/delete_data/${id}`, getConfig());
+
+export const getAllUsers = () => Api.get("/api/user/getAll", getConfig());
+
+export const deleteUserApi = (id) => Api.delete(`/api/user/delete_data/${id}`, getConfig());
 
 export default Api;
