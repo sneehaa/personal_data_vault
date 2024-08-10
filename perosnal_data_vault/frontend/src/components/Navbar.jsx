@@ -4,7 +4,7 @@ import logo from "../assets/images/logo.png";
 import "../styles/navbar.css";
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min';
-
+import Api from "../apis/api";
 
 const Navbar = () => {
   const [activePage, setActivePage] = useState("home");
@@ -22,10 +22,22 @@ const Navbar = () => {
     setActivePage(itemName);
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem("user");
-    setUser(null);
-    navigate("/login");
+  const handleLogout = async () => {
+    try {
+      const response = await Api.post('/api/user/logout');
+
+      if (response.data.success) {
+        // Clear user data and redirect
+        localStorage.removeItem("user");
+        setUser(null);
+        navigate("/login");
+      } else {
+        throw new Error('Logout failed');
+      }
+    } catch (error) {
+      console.error("Logout error:", error);
+      // Optionally, handle errors (e.g., show a toast notification)
+    }
   };
 
   const handleLogin = () => {
@@ -43,15 +55,15 @@ const Navbar = () => {
       </div>
       <div className="navbar-items">
         <Link
-          to="/homepage"
+          to="/"
           className={activePage === "home" ? "active" : ""}
           onClick={() => handleItemClick("home")}
         >
           Home
         </Link>
-      
+        {/* Add more navigation items if needed */}
       </div>
-      <form className="d-flex gap-2" role="search">
+      <div className="d-flex gap-2" role="search">
         {user ? (
           <div className="dropdown">
             <button
@@ -91,7 +103,7 @@ const Navbar = () => {
             </button>
           </>
         )}
-      </form>
+      </div>
     </nav>
   );
 };
