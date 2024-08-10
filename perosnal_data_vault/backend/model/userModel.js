@@ -22,6 +22,10 @@ const userSchema = mongoose.Schema({
     type: String,
     required: true,
   },
+  isAdmin: { 
+    type: Boolean, 
+    default: false
+   },
   passwordHistory: [
     {
       type: String,
@@ -48,11 +52,47 @@ const userSchema = mongoose.Schema({
   emailVerificationExpires: {
     type: Date,
   },
+  
 });
 
+userSchema.pre('save', async function(next) {
+  if (this.isModified('password')) {
+    const salt = await bcrypt.genSalt(10);
+    this.password =  bcrypt.hash(this.password, salt);
+  }
+  next();
+});
+
+
 userSchema.methods.generateAuthToken = function () {
-  return jwt.sign({ _id: this._id }, process.env.JWT_SECRET, { expiresIn: "7d" });
+  const token = jwt.sign({ _id: this._id }, process.env.JWT_SECRET, { expiresIn: "1h" });
+  return token;
 };
+
+userSchema.methods.comparePassword = async function(password) {
+  return await bcrypt.compare(password, this.password);
+};
+
+userSchema.methods.updatePassword = async function (newPassword) {
+  // Check if the new password is in the history
+  const passwordIsInHistory = this.passwordHistory.some(async (oldPassword) => {
+    return await bcrypt.compare(newPassword, oldPassword);
+  });
+
+  if (passwordIsInHistory) throw new Error('Password reuse is not allowed.');
+
+  // Add current password to history
+  this.passwordHistory.push(this.password);
+
+  // Hash the new password and save it
+  const salt = await bcrypt.genSalt(10);
+  this.password = await bcrypt.hash(newPassword, salt);
+  this.passwordLastChanged = Date.now();
+
+  await this.save();
+};
+
+
 
 const User = mongoose.model("User", userSchema);
 
@@ -65,5 +105,6 @@ const validateUser = (data) => {
   });
   return schema.validate(data);
 };
+
 
 module.exports = { User, validateUser };
