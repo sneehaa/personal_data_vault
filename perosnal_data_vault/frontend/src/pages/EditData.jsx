@@ -1,50 +1,45 @@
-import React, { useEffect, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
-import { toast } from 'react-toastify'
-import { getSingleDataApi, updateDataApi } from '../apis/api'
+import React, { useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { toast } from 'react-toastify';
+import { getSingleDataApi, updateDataApi } from '../apis/api';
+import { Button, TextField, Typography, Box, Grid, Avatar, Divider } from '@mui/material';
 
 const EditData = () => {
-    // receive data id from url
-    const { id } = useParams()
+    const { id } = useParams();
+    const navigate = useNavigate();
 
-    // load data
-    useEffect(() => {
-        getSingleDataApi(id).then((res) => {
-            console.log(res.data)
-            setFullName(res.data.data.fullName)
-            setDateOfBirth(res.data.data.dateOfBirth)
-            setAddress(res.data.data.address)
-            setPhoneNumber(res.data.data.phoneNumber)
-            setEmail(res.data.data.email)
-            setOldImage(res.data.data.dataFileUrl)
-        })
-    }, [id])
-
-    // Make useState
     const [fullName, setFullName] = useState('');
     const [dateOfBirth, setDateOfBirth] = useState('');
     const [address, setAddress] = useState('');
     const [phoneNumber, setPhoneNumber] = useState('');
     const [email, setEmail] = useState('');
-    const [oldImage, setOldImage] = useState('')
-
-    // make useState for image
+    const [oldImage, setOldImage] = useState('');
     const [dataFile, setDataFile] = useState(null);
     const [previewImage, setPreviewImage] = useState(null);
 
-    // image upload function
-    const handleImageUpload = (event) => {
-        const file = event.target.files[0]
-        console.log(file)
-        setDataFile(file)
-        setPreviewImage(URL.createObjectURL(file))
-    }
+    useEffect(() => {
+        getSingleDataApi(id).then((res) => {
+            setFullName(res.data.data.fullName);
+            setDateOfBirth(res.data.data.dateOfBirth);
+            setAddress(res.data.data.address);
+            setPhoneNumber(res.data.data.phoneNumber);
+            setEmail(res.data.data.email);
+            setOldImage(res.data.data.dataFileUrl);
+        }).catch(err => {
+            console.error(err);
+            toast.error('Failed to load data');
+        });
+    }, [id]);
 
-    // handle submit function
-    const navigate = useNavigate()
+    const handleImageUpload = (event) => {
+        const file = event.target.files[0];
+        setDataFile(file);
+        setPreviewImage(URL.createObjectURL(file));
+    };
+
     const handleSubmit = (e) => {
-        e.preventDefault()
-        const formData = new FormData()
+        e.preventDefault();
+        const formData = new FormData();
         formData.append('fullName', fullName);
         formData.append('dateOfBirth', dateOfBirth);
         formData.append('address', address);
@@ -52,61 +47,120 @@ const EditData = () => {
         formData.append('email', email);
         formData.append('dataFile', dataFile);
 
-        // make an api call
         updateDataApi(id, formData).then((res) => {
             if (res.data.success === false) {
-                toast.error(res.data.message)
+                toast.error(res.data.message);
             } else {
-                toast.success(res.data.message)
-                navigate('/')
+                toast.success(res.data.message);
+                navigate('/');
             }
         }).catch((err) => {
-            console.log(err)
-            toast.error('Internal Server Error!')
-        })
-    }
+            console.error(err);
+            toast.error('Internal Server Error!');
+        });
+    };
 
     return (
-        <>
-            <div className='m-4'>
-                <h3>Editing Data - <span className='text-danger'>{fullName}</span></h3>
-                <div className='d-flex gap-3'>
-                    <form>
-                        <label>Full Name</label>
-                        <input value={fullName} onChange={(e) => setFullName(e.target.value)} className='form-control mb-2' type="text" placeholder='Enter full name' />
-
-                        <label>Date of Birth</label>
-                        <input value={dateOfBirth} onChange={(e) => setDateOfBirth(e.target.value)} className='form-control mb-2' type="date" placeholder='Enter date of birth' />
-
-                        <label>Address</label>
-                        <input value={address} onChange={(e) => setAddress(e.target.value)} className='form-control mb-2' type="text" placeholder='Enter address' />
-
-                        <label>Phone Number</label>
-                        <input value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} className='form-control mb-2' type="tel" placeholder='Enter phone number' />
-
-                        <label>Email</label>
-                        <input value={email} onChange={(e) => setEmail(e.target.value)} className='form-control mb-2' type="email" placeholder='Enter email' />
-
-                        <label>Image</label>
-                        <input onChange={handleImageUpload} type="file" className='form-control' />
-
-                        <button onClick={handleSubmit} className='btn btn-primary w-100 mt-2'>Update Data</button>
+        <Box sx={{ p: 4, bgcolor: '#f1f8f6', minHeight: '100vh' }}>
+            <Typography variant="h4" gutterBottom align="center" color="#388e3c">
+                Edit Data - <span style={{ color: '#d32f2f' }}>{fullName}</span>
+            </Typography>
+            <Divider sx={{ mb: 3, borderColor: '#c8e6c9' }} />
+            <Grid container spacing={3}>
+                <Grid item xs={12} md={6}>
+                    <form onSubmit={handleSubmit}>
+                        <TextField
+                            label="Full Name"
+                            value={fullName}
+                            onChange={(e) => setFullName(e.target.value)}
+                            variant="outlined"
+                            fullWidth
+                            margin="normal"
+                            sx={{ mb: 2 }}
+                        />
+                        <TextField
+                            label="Date of Birth"
+                            type="date"
+                            value={dateOfBirth}
+                            onChange={(e) => setDateOfBirth(e.target.value)}
+                            variant="outlined"
+                            fullWidth
+                            margin="normal"
+                            InputLabelProps={{ shrink: true }}
+                        />
+                        <TextField
+                            label="Address"
+                            value={address}
+                            onChange={(e) => setAddress(e.target.value)}
+                            variant="outlined"
+                            fullWidth
+                            margin="normal"
+                        />
+                        <TextField
+                            label="Phone Number"
+                            type="tel"
+                            value={phoneNumber}
+                            onChange={(e) => setPhoneNumber(e.target.value)}
+                            variant="outlined"
+                            fullWidth
+                            margin="normal"
+                        />
+                        <TextField
+                            label="Email"
+                            type="email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            variant="outlined"
+                            fullWidth
+                            margin="normal"
+                        />
+                        <Button
+                            variant="contained"
+                            component="label"
+                            color="success"
+                            fullWidth
+                            sx={{ mt: 2, mb: 2 }}
+                        >
+                            Upload Image
+                            <input
+                                type="file"
+                                onChange={handleImageUpload}
+                                hidden
+                            />
+                        </Button>
+                        <Button
+                            type="submit"
+                            variant="contained"
+                            color="success"
+                            fullWidth
+                            sx={{ mb: 2 }}
+                        >
+                            Update Data
+                        </Button>
                     </form>
-                    <div>
-                        <h6>Old Image Preview</h6>
-                        <img className='img-fluid rounded-4 object-fit-cover' width={300} height={300} src={oldImage} alt="" />
-
-                        <h6 className='mt-4'>New Image</h6>
+                </Grid>
+                <Grid item xs={12} md={6} container spacing={2} direction="column" alignItems="center">
+                    <Box sx={{ textAlign: 'center' }}>
+                        <Typography variant="h6" gutterBottom>Old Image Preview</Typography>
+                        <Avatar
+                            src={oldImage}
+                            sx={{ width: 300, height: 300, mb: 2 }}
+                        />
+                        <Typography variant="h6" gutterBottom>New Image</Typography>
                         {previewImage ? (
-                            <img src={previewImage} alt="Data Image" className='img-fluid rounded-4 object-fit-cover' width={300} height={300} />
+                            <img
+                                src={previewImage}
+                                alt="Data Image"
+                                style={{ width: '100%', maxWidth: 300, height: 'auto', borderRadius: 8 }}
+                            />
                         ) : (
-                            <p>No image selected!</p>
+                            <Typography>No image selected!</Typography>
                         )}
-                    </div>
-                </div>
-            </div>
-        </>
-    )
-}
+                    </Box>
+                </Grid>
+            </Grid>
+        </Box>
+    );
+};
 
-export default EditData
+export default EditData;

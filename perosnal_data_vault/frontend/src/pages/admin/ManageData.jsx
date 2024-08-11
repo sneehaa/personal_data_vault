@@ -31,10 +31,10 @@ const ManageData = () => {
         <div className='m-4'>
             <div className='d-flex justify-content-between'>
                 <h1>Manage Users Data</h1>
-                <Link to="/add" className="btn btn-primary">Add New Data</Link>
+            
             </div>
             <table className='table mt-4'>
-                <thead className='table-dark'>
+            <thead className="table-success">
                     <tr>
                         <th>User's Image</th>
                         <th>Full Name</th>

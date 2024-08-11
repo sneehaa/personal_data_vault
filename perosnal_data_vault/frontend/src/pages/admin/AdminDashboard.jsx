@@ -28,22 +28,21 @@ const AdminDashboard = () => {
   };
 
   return (
-    <Container component="main" maxWidth="lg">
-      <Box sx={{ marginTop: 8, textAlign: 'center' }}>
-        <Typography variant="h3" gutterBottom sx={{ color: '#333', fontWeight: 'bold' }}>
+    <Container component="main" maxWidth="lg" sx={{ bgcolor: '#e8f5e9', minHeight: '100vh', py: 8 }}>
+      <Box sx={{ textAlign: 'center' }}>
+        <Typography variant="h3" gutterBottom sx={{ color: '#004d40', fontWeight: 'bold' }}>
           Admin Dashboard
         </Typography>
-        <Typography variant="h6" paragraph sx={{ color: '#666', mb: 4 }}>
+        <Typography variant="h6" paragraph sx={{ color: '#004d40', mb: 4 }}>
           Manage users, data, and application settings from here.
         </Typography>
         <Grid container spacing={3} justifyContent="center">
           <Grid item xs={12} sm={6} md={4}>
             <CustomButton
               variant="contained"
-              color="primary"
               fullWidth
               onClick={handleManageUsers}
-              sx={{ bgcolor: '#1976d2', '&:hover': { bgcolor: '#1565c0' }, mb: 2 }}
+              sx={{ bgcolor: '#0288d1', '&:hover': { bgcolor: '#0277bd' }, mb: 2 }}
             >
               Manage Users
             </CustomButton>
@@ -51,10 +50,9 @@ const AdminDashboard = () => {
           <Grid item xs={12} sm={6} md={4}>
             <CustomButton
               variant="contained"
-              color="error"
               fullWidth
               onClick={handleManageData}
-              sx={{ bgcolor: '#f44336', '&:hover': { bgcolor: '#c62828' }, mb: 2 }}
+              sx={{ bgcolor: '#00897b', '&:hover': { bgcolor: '#00796b' }, mb: 2 }}
             >
               Manage Data
             </CustomButton>
@@ -62,10 +60,9 @@ const AdminDashboard = () => {
           <Grid item xs={12} sm={6} md={4}>
             <CustomButton
               variant="contained"
-              color="info"
               fullWidth
               onClick={handleSettings}
-              sx={{ bgcolor: '#0288d1', '&:hover': { bgcolor: '#0277bd' }, mb: 2 }}
+              sx={{ bgcolor: '#ff7043', '&:hover': { bgcolor: '#ff5722' }, mb: 2 }}
             >
               Settings
             </CustomButton>

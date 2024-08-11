@@ -7,7 +7,6 @@ import Loading from "../components/Loading";
 import "../styles/userProfile.css";
 import { jwtDecode } from "jwt-decode";
 
-
 import {
     Avatar,
     Box,
@@ -42,32 +41,24 @@ const UserProfile = () => {
 
     const fetchUserProfile = async () => {
         try {
-          const token = localStorage.getItem('token');
-          console.log('Token:', token); // Log the token value
-      
-          if (!token) {
-            throw new Error("No token found");
-          }
-      
-          const decodedToken = jwtDecode(token);
-          console.log('Decoded token:', decodedToken); // Log the decoded token
-      
-          const userId = decodedToken._id;
-          if (!userId) {
-            throw new Error("Unable to decode token or retrieve user ID.");
-          }
-      
-          const response = await axios.get(`http://localhost:5500/api/user/profile/${userId}`, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-      
-          setUserData(response.data.userProfile);
-          setLoading(false);
+            const token = localStorage.getItem("token");
+            if (!token) throw new Error("No token found");
+
+            const decodedToken = jwtDecode(token);
+            const userId = decodedToken._id;
+            if (!userId) throw new Error("Unable to decode token or retrieve user ID.");
+
+            const response = await axios.get(`http://localhost:5500/api/user/profile/${userId}`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+
+            setUserData(response.data.userProfile);
+            setLoading(false);
         } catch (error) {
-          console.error("Error fetching user profile:", error);
-          setLoading(false);
+            console.error("Error fetching user profile:", error);
+            setLoading(false);
         }
-      };
+    };
 
     useEffect(() => {
         fetchUserProfile();
@@ -143,58 +134,88 @@ const UserProfile = () => {
 
     return (
         <>
-            <div className="user-profile-container">
+            <Box
+                className="user-profile-container"
+                sx={{
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    flexDirection: 'column',
+                    padding: 3,
+                    backgroundColor: '#eafaf1', // Light green background
+                    minHeight: '100vh',
+                }}
+            >
                 {loading ? (
                     <Loading />
                 ) : userData ? (
-                    <div className="user-profile">
-                        <h6 className="profile-title">User Profile</h6>
-                        <Divider />
-                        <div className="profile-details">
-                            <div className="profile-picture">
+                    <Box
+                        className="user-profile"
+                        sx={{
+                            backgroundColor: '#ffffff',
+                            borderRadius: 2,
+                            padding: 3,
+                            maxWidth: 600,
+                            width: '100%',
+                            border: '1px solid #c8e6c9', // Light green border
+                        }}
+                    >
+                        <Typography variant="h5" align="center" gutterBottom sx={{ color: '#388e3c' }}>
+                            User Profile
+                        </Typography>
+                        <Divider sx={{ marginBottom: 2, borderColor: '#c8e6c9' }} />
+                        <Grid container spacing={3}>
+                            <Grid item xs={12} sm={4} sx={{ display: 'flex', justifyContent: 'center' }}>
                                 {imagePreview ? (
                                     <Avatar
                                         alt="Profile Picture"
                                         src={imagePreview}
-                                        sx={{ width: 100, height: 100, marginRight: "1rem" }}
+                                        sx={{ width: 120, height: 120 }}
                                     />
                                 ) : (
-                                    <div className="initials-placeholder">
+                                    <Avatar
+                                        alt="Profile Picture"
+                                        sx={{ width: 120, height: 120, fontSize: 48, backgroundColor: '#66bb6a' }}
+                                    >
                                         {getInitials(userData.firstName, userData.lastName)}
-                                    </div>
+                                    </Avatar>
                                 )}
-                            </div>
-                            <div className="profile-info">
-                                <p>
+                            </Grid>
+                            <Grid item xs={12} sm={8}>
+                                <Typography variant="body1">
                                     <strong>Name:</strong> {userData.firstName} {userData.lastName}
-                                </p>
-                                <p>
+                                </Typography>
+                                <Typography variant="body1">
                                     <strong>Email:</strong> {userData.email}
-                                </p>
-                                <p>
+                                </Typography>
+                                <Typography variant="body1">
                                     <strong>Username:</strong> {userData.username}
-                                </p>
-                                <p>
+                                </Typography>
+                                <Typography variant="body1">
                                     <strong>Phone Number:</strong> {userData.phone}
-                                </p>
-                                <p>
+                                </Typography>
+                                <Typography variant="body1">
                                     <strong>Address:</strong> {userData.address}
-                                </p>
-                            </div>
-                        </div>
-                        <Divider />
-                        <Link
-                            to="#"
-                            className="edit-profile-link"
-                            onClick={handleEditProfile}
-                        >
-                            Edit Profile
-                        </Link>
-                    </div>
+                                </Typography>
+                            </Grid>
+                        </Grid>
+                        <Divider sx={{ marginY: 2, borderColor: '#c8e6c9' }} />
+                        <Box sx={{ textAlign: 'center' }}>
+                            <Button
+                                variant="outlined"
+                                color="success" // Green button color
+                                onClick={handleEditProfile}
+                                sx={{ mt: 2 }}
+                            >
+                                Edit Profile
+                            </Button>
+                        </Box>
+                    </Box>
                 ) : (
                     <div className="error-message">Error fetching user profile</div>
                 )}
-            </div>
+            </Box>
+
             <Modal
                 open={editMode}
                 onClose={() => setEditMode(false)}
@@ -206,14 +227,15 @@ const UserProfile = () => {
                         top: "50%",
                         left: "50%",
                         transform: "translate(-50%, -50%)",
-                        bgcolor: "white",
+                        bgcolor: "#ffffff",
                         boxShadow: 24,
                         p: 4,
-                        width: 400,
+                        width: { xs: '90%', sm: '70%', md: '50%' },
                         borderRadius: 2,
+                        border: '1px solid #c8e6c9', // Light green border
                     }}
                 >
-                    <Typography variant="h6" gutterBottom>
+                    <Typography variant="h6" gutterBottom sx={{ color: '#388e3c' }}>
                         Edit Profile
                     </Typography>
 
@@ -228,7 +250,7 @@ const UserProfile = () => {
                         <Avatar
                             alt="Profile Picture"
                             src={imagePreview}
-                            sx={{ width: 100, height: 100, marginRight: "1rem" }}
+                            sx={{ width: 100, height: 100, marginRight: "1rem", backgroundColor: '#66bb6a' }}
                         />
                         <label htmlFor="upload-photo">
                             <input
@@ -238,11 +260,14 @@ const UserProfile = () => {
                                 type="file"
                                 onChange={handleImageChange}
                             />
+                            <Button variant="outlined" component="span" color="success">
+                                Upload Photo
+                            </Button>
                         </label>
                     </Box>
 
                     <Grid container spacing={2}>
-                        <Grid item xs={6}>
+                        <Grid item xs={12} sm={6}>
                             <TextField
                                 label="First Name"
                                 value={editedData.firstName}
@@ -254,7 +279,7 @@ const UserProfile = () => {
                                 margin="normal"
                             />
                         </Grid>
-                        <Grid item xs={6}>
+                        <Grid item xs={12} sm={6}>
                             <TextField
                                 label="Last Name"
                                 value={editedData.lastName}
@@ -269,6 +294,7 @@ const UserProfile = () => {
                         <Grid item xs={12}>
                             <TextField
                                 label="Email"
+                                type="email"
                                 value={editedData.email}
                                 onChange={(e) =>
                                     setEditedData({ ...editedData, email: e.target.value })
@@ -315,30 +341,36 @@ const UserProfile = () => {
                             />
                         </Grid>
                     </Grid>
-
-                    <Box
-                        sx={{
-                            display: "flex",
-                            justifyContent: "flex-end",
-                            marginTop: "1rem",
-                        }}
-                    >
+                    <Box sx={{ textAlign: 'center', mt: 2 }}>
                         <Button
                             variant="contained"
+                            color="success" // Green button color
                             onClick={handleSubmit}
-                            color="primary"
                         >
-                            Save
+                            Save Changes
+                        </Button>
+                        <Button
+                            variant="outlined"
+                            color="error"
+                            onClick={() => setEditMode(false)}
+                            sx={{ ml: 2 }}
+                        >
+                            Cancel
                         </Button>
                     </Box>
                 </Box>
             </Modal>
+
             <Snackbar
                 open={openSnackbar}
                 autoHideDuration={6000}
                 onClose={handleCloseSnackbar}
             >
-                <Alert onClose={handleCloseSnackbar} severity={snackbarSeverity}>
+                <Alert
+                    onClose={handleCloseSnackbar}
+                    severity={snackbarSeverity}
+                    sx={{ width: "100%" }}
+                >
                     {snackbarMessage}
                 </Alert>
             </Snackbar>

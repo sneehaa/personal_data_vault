@@ -82,7 +82,7 @@ const Navbar = () => {
                 </Link>
               </li>
               <li>
-                <Link className="dropdown-item" to="/reset-password">
+                <Link className="dropdown-item" to="/forgot-password">
                   Change password
                 </Link>
               </li>
