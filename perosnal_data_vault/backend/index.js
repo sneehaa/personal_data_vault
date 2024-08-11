@@ -65,9 +65,9 @@ app.get("/test", (req, res) => {
 // user route
 app.use('/api/user', require('./routes/userRoutes'));
 
-app.use('/api/data', require('./routes/dataRoutes'));
+app.use('/api', require('./routes/authRoutes'))
 
-app.use('/uploads', express.static('uploads'));
+app.use('/api/data', require('./routes/dataRoutes'));
 
 
 

@@ -2,11 +2,152 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const User = require('../model/userModel').User;
+const OTP = require('../model/otpModel')
 const Token = require('../model/tokenModel');
 const crypto = require('crypto');
 const sendEmail = require('../utils/sendEmail');
 const { validationResult } = require('express-validator');
 const { logActivity } = require('../auditLogger');
+const nodemailer = require("nodemailer");
+
+
+
+
+//function for generating the otp
+const generateOTP = () => {
+  return Math.floor(100000 + Math.random() * 900000);
+};
+
+//configuring nodemailer
+const transporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
+});
+
+const sendOTP = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    // Find the user by email
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found." });
+    }
+
+    // Generate OTP
+    const otp = generateOTP();
+
+    // Save OTP to database
+    try {
+      await OTP.create({ userId: user.id, otp, isUsed: false });
+    } catch (error) {
+      console.error("Error saving OTP to database:", error);
+      return res
+        .status(500)
+        .json({ success: false, message: "Failed to save OTP." });
+    }
+
+    // Send OTP to user's email
+    await transporter.sendMail({
+      from: '"Personal Data Vault" <adhikarisneha0001@gmail.com>',
+      to: email,
+      subject: "OTP Verification",
+      text: `Your OTP for password reset is: ${otp}`,
+    });
+
+    // Update user's OTP in the database
+    user.otp = otp;
+    await user.save();
+
+    console.log("OTP sent to user:", otp);
+
+    res.status(200).json({
+      success: true,
+      message: "OTP sent to your email.",
+    });
+  } catch (error) {
+    console.error("Error sending OTP:", error);
+    res.status(500).json({ success: false, message: "Failed to send OTP." });
+  }
+};
+
+// Controller function to verify OTP and update password
+const verifyOTPAndUpdatePassword = async (req, res) => {
+  try {
+    const { email, otp, newPassword } = req.body;
+
+    // Finding the user by email
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found." });
+    }
+
+    // Checking if the user's password has already been updated with the OTP
+    if (user.passwordUpdatedWithOTP) {
+      return res
+        .status(400)
+        .json({ success: false, message: "OTP already used." });
+    }
+
+    // Finding the OTP record for the user
+    const otpRecord = await OTP.findOne({
+      userId: user.id,
+      otp,
+      isUsed: false,
+    });
+
+    if (!otpRecord || otpRecord.isUsed) {
+      return res.status(400).json({ success: false, message: "Invalid OTP." });
+    }
+
+    // Validate the new password based on security criteria
+    if (!validatePassword(newPassword)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Password must be 8-12 characters long, include at least one uppercase letter, one lowercase letter, one number, and one special character.',
+      });
+    }
+
+    // Encrypt the new password
+    const randomSalt = await bcrypt.genSalt(10);
+    const encryptedPassword = await bcrypt.hash(newPassword, randomSalt);
+
+    // Updating the user's password with the encrypted password
+    user.password = encryptedPassword;
+
+    // Mark the OTP as used
+    otpRecord.isUsed = true;
+    await otpRecord.save();
+
+    // Setting the flag to indicate that the OTP has been used to update the password
+    user.passwordUpdatedWithOTP = true;
+    await user.save();
+
+    await logActivity(
+      user._id,
+      'Password Update',
+      'Password updated successfully'
+    );
+
+    res
+      .status(200)
+      .json({ success: true, message: "Password updated successfully." });
+  } catch (error) {
+    console.error("Error verifying OTP and updating password:", error);
+    res
+      .status(500)
+      .json({ success: false, message: "Failed to update password." });
+  }
+};
 
 
 const PASSWORD_MIN_LENGTH = 8;
@@ -294,11 +435,56 @@ const deleteUser = async (req, res) => {
   }
 };
 
+//edit user profile
+const editUserProfile = async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    const user = await Users.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    const updatedUserProfile = await Users.findByIdAndUpdate(userId, req.body, {
+      new: true,
+      runValidators: true,
+    });
+    res.status(200).json({
+      success: true,
+      message: "User profile updated successfully.",
+      updatedUserProfile,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Server Error",
+      error: error.message,
+    });
+  }
+};
+
+//User Profile Function
+const userProfile = async (req, res, next) => {
+  const user = await Users.findOne(req.user.id).select("-password");
+  console.log(user, "User");
+  res.status(200).json({
+    success: true,
+    user,
+  });
+};
+
 module.exports = {
+  sendOTP,
+  verifyOTPAndUpdatePassword ,
   register,
   loginUser,
   verifyEmail,
   getUserProfile,
   getAllUsers,
-  deleteUser
+  deleteUser,
+  editUserProfile,
+  userProfile
 };

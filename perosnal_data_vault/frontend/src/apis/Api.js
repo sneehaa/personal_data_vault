@@ -44,4 +44,8 @@ export const getAllUsers = () => Api.get("/api/user/getAll", getConfig());
 
 export const deleteUserApi = (id) => Api.delete(`/api/user/delete_data/${id}`, getConfig());
 
+export const forgetApi = (data) => Api.post("/api/auth/forgot-password", data);
+
+export const resetApi = (data) => Api.post("/api/auth/reset-password",data)
+
 export default Api;

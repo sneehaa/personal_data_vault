@@ -31,6 +31,9 @@ router.get('/getAll', authGuard, authGuardAdmin, userController.getAllUsers);
 
 router.delete('/delete/:id', authGuard, authGuardAdmin, userController.deleteUser);
 
+router.put("/edit/:userId",authGuard, userController.editUserProfile);
+
+
 
 router.post('/logout', (req, res) => {
   req.session.destroy(err => {
